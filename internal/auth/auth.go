@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/dukerupert/south-texas-farmer/internal/database"
@@ -94,7 +95,7 @@ func AuthMiddleware() echo.MiddlewareFunc {
 			}
 
 			// Optional: Add user info to context for easy access
-			if userID, ok := sess.Values[UserIDKey].(int); ok {
+			if userID, ok := sess.Values[UserIDKey].(int32); ok {
 				c.Set("user_id", userID)
 			}
 			if username, ok := sess.Values[UsernameKey].(string); ok {
@@ -169,6 +170,8 @@ func (h *AuthHandlers) Login(c echo.Context) error {
 		})
 	}
 
+	slog.Info("User info is", slog.Any("id", user.ID), slog.Any("username", user.Username))
+
 	// Set session values
 	sess.Values[IsAuthKey] = true
 	sess.Values[UserIDKey] = user.ID
@@ -195,6 +198,7 @@ func (h *AuthHandlers) Login(c echo.Context) error {
 
 // Logout handler
 func (h *AuthHandlers) Logout(c echo.Context) error {
+	slog.Info("Logout endpoint hit")
 	sess, err := session.Get(SessionName, c)
 	if err != nil {
 		return c.Redirect(http.StatusFound, "/login")
@@ -217,9 +221,9 @@ func (h *AuthHandlers) Logout(c echo.Context) error {
 // Protected route example
 func Dashboard(c echo.Context) error {
 	username := c.Get("username").(string)
+	userID := c.Get("user_id").(int32)
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": fmt.Sprintf("Welcome to dashboard, %s!", username),
-		"user_id": c.Get("user_id"),
+		"message": fmt.Sprintf("Welcome to dashboard, %s, id: %d", username, userID),
 	})
 }
 
@@ -230,7 +234,7 @@ func GetCurrentUser(c echo.Context) (*database.User, error) {
 		return nil, err
 	}
 
-	userID, ok := sess.Values[UserIDKey].(int)
+	userID, ok := sess.Values[UserIDKey].(int32)
 	if !ok {
 		return nil, fmt.Errorf("user not found in session")
 	}
