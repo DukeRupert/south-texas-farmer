@@ -1,0 +1,10 @@
+{
+    "plpgsqlLanguageServer.user": "postgres",
+    "plpgsqlLanguageServer.password": "password123",
+    "plpgsqlLanguageServer.database": "myapp",
+    "plpgsqlLanguageServer.definitionFiles": [
+        "**/*.psql",
+        "**/*.pgsql",
+        "**/*.sql"
+    ]
+}
